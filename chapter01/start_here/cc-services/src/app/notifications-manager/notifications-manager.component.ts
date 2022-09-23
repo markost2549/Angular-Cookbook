@@ -1,30 +1,42 @@
+import { Observable } from 'rxjs';
+import { first } from 'rxjs/operators';
 import { Component, OnInit } from '@angular/core';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-notifications-manager',
   templateUrl: './notifications-manager.component.html',
-  styleUrls: ['./notifications-manager.component.scss']
+  styleUrls: ['./notifications-manager.component.scss'],
 })
 export class NotificationsManagerComponent implements OnInit {
-  notificationsCount = 0
-  constructor() { }
+  notificationsCount$: Observable<number>;
+
+  constructor(private notificationService: NotificationService) {}
 
   ngOnInit(): void {
+    this.notificationsCount$ = this.notificationService.count$;
+  }
+
+  getCountValue(callback) {
+    this.notificationsCount$.pipe(first()).subscribe(callback);
   }
 
   addNotification() {
-    this.notificationsCount++;
+    this.getCountValue((countValue) => {
+      this.notificationService.setCount(++countValue);
+    });
   }
 
   removeNotification() {
-    if (this.notificationsCount == 0) {
-      return;
-    }
-    this.notificationsCount--;
+    this.getCountValue((countValue) => {
+      if (countValue === 0) {
+        return;
+      }
+      this.notificationService.setCount(--countValue);
+    });
   }
 
   resetCount() {
-    this.notificationsCount = 0;
+    this.notificationService.setCount(0);
   }
-
 }
